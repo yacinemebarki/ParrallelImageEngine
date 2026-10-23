@@ -1,10 +1,11 @@
 #include <string>
 #include <vector>
+#include "ImageMatrix.hpp"
 
 class Image{
     private: std::string path;  
 
-    Image(std::string path);
+    public: Image(std::string path);
     
-    std::vector<std::vector<float>> toMatrix();
+    ImageMatrix toMatrix();
 };
