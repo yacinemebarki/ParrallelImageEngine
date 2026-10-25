@@ -10,7 +10,7 @@ int main() {
         return 1;
     }
 
-    char buffer[14];
+    char buffer[64];
 
     file.read(buffer, sizeof(buffer));
 
