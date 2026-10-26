@@ -6,6 +6,7 @@
 #include "ImageMatrix.hpp"
 
 std::vector<uint8_t> readFile(std::string filePath);
+std::string checkType(std::vector<uint8_t> data);
 
 class Image{
     private: std::string path;  

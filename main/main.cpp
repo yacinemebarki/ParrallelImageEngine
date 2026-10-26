@@ -5,6 +5,6 @@
 #include <vector>
 
 int main() {
-    std::vector<uint8_t> data = readFile("image.png");
+    std::vector<uint8_t> data = readFile("main/image.png");
     return 0;
 }
