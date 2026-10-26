@@ -4,17 +4,13 @@
 #include <fstream>
 #include <iostream>
 #include <cstdint>
+#include <stdexcept>
 
-
-Image::Image(std::string path){
-    this->path = path;
-}
-
-ImageMatrix Image::toMatrix(){
-    std::ifstream file(this->path, std::ios::binary);
+std::vector<uint8_t> readFile(std::string filePath){
+    std::ifstream file(filePath, std::ios::binary);
 
     if(!file.is_open()){
-        std::cerr<<"failed to open Image";
+        throw std::runtime_error("Failed to open image");
     }
 
     file.seekg(0, std::ios::end);
@@ -26,10 +22,17 @@ ImageMatrix Image::toMatrix(){
     std::vector<uint8_t>  buffer(fileSize);
 
     if(!file.read(reinterpret_cast<char*>(buffer.data()), fileSize)){
-        std::cerr<<"failed to read the image";
+        throw std::runtime_error("Failed to read image");
     }
+    std::cout<<"file was read successfully";
+    return buffer;
+}
 
-    std::cout<<"Image opened successfully";
 
+Image::Image(std::string path){
+    this->path = path;
+}
 
+ImageMatrix Image::toMatrix(){
+    throw std::runtime_error("Image::toMatrix is not implemented");
 }

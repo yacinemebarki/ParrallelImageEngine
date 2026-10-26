@@ -1,3 +1,5 @@
+#pragma once
+
 class Pixel{
     private: unsigned char red;
     private: unsigned char green;
