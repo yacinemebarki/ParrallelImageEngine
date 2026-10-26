@@ -38,7 +38,7 @@ std::vector<uint8_t> readFile(std::string filePath){
 }
 
 //for now it accept only png image
-std::string checkType(std::vector<uint8_t> data){   
+ImageType checkType(std::vector<uint8_t> data){   
     const uint8_t PngSignature[8] = {0x89, 0x50, 0x4E, 0x47,0x0D, 0x0A, 0x1A, 0x0A};
     if(data.size() < 8){
         throw std::runtime_error("the image is small to be png");
@@ -50,20 +50,61 @@ std::string checkType(std::vector<uint8_t> data){
         }
     }
     std::cout<<"Valid png signature";
-    return "png";
+    return ImageType::PNG;
 }
+
+uint32_t readBigEndian32(const std::vector<uint8_t>& data, size_t offset){
+    uint32_t result = 0;
+    for(int i = 0; i < 4; i++){
+        uint32_t value = data[offset + i];
+        result |= value << (8 * (3 - i));
+    }
+    return result;
+}
+
+ImageMetadata readPngIhdr(std::vector<uint8_t>& data){
+    if(data.size() < 29){
+        throw std::runtime_error("invalid png format");
+    }
+    ImageMetadata info;
+    info.bitDepth = data[24];
+    info.colorType = data[25];
+    info.compressionMethod = data[26];
+    info.filterMethod = data[27];
+    info.interlaceMethod = data[28]; 
+    info.width = readBigEndian32(data, 16);
+    info.height = readBigEndian32(data, 20);
+    return info; 
+}
+
 
 
 Image::Image(std::string path){
     this->path = path;
 }
 
+ImageMetadata Image::getInfo(){
+    return this->information;
+}
+
+void Image::setInfo(ImageMetadata info){
+    this->information = info;
+}
+
 ImageMatrix Image::toMatrix(){
     std::vector<uint8_t> data = readFile(this->path);
 
-    std::string type = checkType(data);
-    if(type != "png"){
-        throw std::runtime_error("this program accept only png file");
+    ImageType type = checkType(data);
+    switch(type) {
+        case ImageType::PNG:
+            this->setInfo(readPngIhdr(data));
+            break;
+        case ImageType::JPEG:
+            break;
+        case ImageType::BMP:
+            break;
+        default:
+            throw std::runtime_error("Unsupported image format");
     }
 
     return ImageMatrix(std::vector<std::vector<Pixel>>{});
