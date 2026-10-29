@@ -81,6 +81,7 @@ ImageMetadata readPngIhdr(std::vector<uint8_t>& data){
 
 Image::Image(std::string path){
     this->path = path;
+    this->data = readFile(path);
 }
 
 ImageMetadata Image::getInfo(){
@@ -90,14 +91,68 @@ ImageMetadata Image::getInfo(){
 void Image::setInfo(ImageMetadata info){
     this->information = info;
 }
+void Image::addChunk(PngChunk chunk){
+    this->chunks.push_back(chunk);
+}
+std::vector<PngChunk> Image::getChunks(){
+    return this->chunks;
+}
+void Image::praseChunk(){
+    this->chunks.clear();
+
+    size_t offset = 8;
+    bool foundIEND = false;
+
+    while(offset < this->data.size()){
+        if(this->data.size() - offset < 12){
+            throw std::runtime_error("each chunk must have 12 bytes");
+        }
+
+        PngChunk chunk;
+        chunk.length = readBigEndian32(this->data, offset);
+        offset += 4;
+
+        chunk.type = std::string(reinterpret_cast<const char*>(this->data.data() + offset ), 4);
+        offset += 4;
+
+        bool notfit = chunk.length > this->data.size() - offset - 4;
+        
+        if(notfit){
+            throw std::runtime_error("invalid PNG chunk length");
+        }
+
+        chunk.data.assign(this->data.begin() + offset, this->data.begin() + chunk.length + offset);
+        offset += chunk.length;
+
+        chunk.crc = readBigEndian32(data, offset);
+        offset += 4;
+
+        bool notIHDR = chunk.type != "IHDR" || chunk.length != 13;
+        if(this->chunks.empty() && notIHDR){
+            throw std::runtime_error("the first chunk must be ihdr");
+        }
+
+        this->addChunk(chunk);
+
+        if(chunk.type == "IEND"){
+            if(chunk.length != 0){
+                throw std::runtime_error("Invalid IEND chunk");
+            }
+            foundIEND = true;
+            break;
+        }
+    }
+    if (!foundIEND) {
+        throw std::runtime_error("PNG is missing IEND");
+    }
+}
 
 ImageMatrix Image::toMatrix(){
-    std::vector<uint8_t> data = readFile(this->path);
-
-    ImageType type = checkType(data);
+    ImageType type = checkType(this->data);
     switch(type) {
         case ImageType::PNG:
-            this->setInfo(readPngIhdr(data));
+            this->praseChunk();
+            this->setInfo(readPngIhdr(this->data));
             break;
         case ImageType::JPEG:
             break;

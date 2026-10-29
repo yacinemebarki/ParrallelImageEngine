@@ -36,3 +36,39 @@ TEST(PngReaderTest, RejectsInvalidPngSignature) {
 
     EXPECT_THROW(checkType(invalidData), std::runtime_error);
 }
+#include <gtest/gtest.h>
+#include "image.hpp"
+
+TEST(ImageTest, CanCreateImageObject) {
+    Image image("main/image.png");
+
+    EXPECT_FALSE(image.data.empty());
+}
+
+TEST(PngReaderTest, StoresChunk) {
+    Image image("main/image.png"); 
+
+    PngChunk chunk;
+    chunk.length = 0;
+    chunk.type = "IEND";
+    chunk.crc = 0;
+
+    image.addChunk(chunk);
+
+    auto chunks = image.getChunks();
+
+    ASSERT_EQ(chunks.size(), 1);
+    EXPECT_EQ(chunks[0].type, "IEND");
+    EXPECT_EQ(chunks[0].length, 0);
+}
+TEST(ImageTest, ParsesPngChunks) {
+    Image image("main/image.png");
+
+    image.toMatrix();
+
+    auto chunks = image.getChunks();
+
+    ASSERT_FALSE(chunks.empty());
+    EXPECT_EQ(chunks.front().type, "IHDR");
+    EXPECT_EQ(chunks.back().type, "IEND");
+}

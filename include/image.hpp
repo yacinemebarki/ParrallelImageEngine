@@ -28,13 +28,25 @@ struct ImageMetadata {
     uint8_t interlaceMethod;
 };
 
+struct PngChunk {
+    uint32_t length;
+    std::string type;
+    std::vector<uint8_t> data;
+    uint32_t crc;
+};
+
 class Image{
     private: std::string path;  
     private: ImageMetadata information;
+    private: std::vector<PngChunk> chunks;
+    public: std::vector<uint8_t> data;
 
     public: Image(std::string path);
     
     ImageMatrix toMatrix();
     ImageMetadata getInfo();
     void setInfo(ImageMetadata info);
+    std::vector<PngChunk> getChunks();
+    void addChunk(PngChunk chunk);
+    void praseChunk();
 };
