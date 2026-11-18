@@ -21,6 +21,14 @@ TEST(PngReaderTest, ReadsZero) {
     EXPECT_EQ(readBigEndian32(data, 0), 0);
 }
 
+TEST(PngReaderTest, ReadsBigEndian32BitIntegerAtOffset) {
+    std::vector<uint8_t> data = {
+        0xAA, 0x12, 0x34, 0x56, 0x78, 0xAA
+    };
+
+    EXPECT_EQ(readBigEndian32(data, 1), 0x12345678);
+}
+
 TEST(PngReaderTest, RecognizesValidPngSignature) {
     std::vector<uint8_t> data = {
         0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A

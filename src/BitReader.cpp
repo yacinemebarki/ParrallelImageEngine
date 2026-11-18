@@ -2,8 +2,16 @@
 #include <stdexcept>
 
 BitReader::BitReader(const std::vector<uint8_t>& data)
-    : data(data), bitPosition(0)
+    : BitReader(data, 0)
 {
+}
+
+BitReader::BitReader(const std::vector<uint8_t>& data, size_t byteOffset)
+    : data(data), bitPosition(byteOffset * 8)
+{
+    if(byteOffset > data.size()){
+        throw std::out_of_range("byte offset is beyond the end of the data");
+    }
 }
 
 uint32_t BitReader::readBits(int n){

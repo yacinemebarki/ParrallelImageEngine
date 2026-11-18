@@ -14,5 +14,6 @@ class BitReader{
 
     public:
     explicit BitReader(const std::vector<uint8_t>& data);
+    BitReader(const std::vector<uint8_t>& data, size_t byteOffset);
     uint32_t readBits(int n); 
 };

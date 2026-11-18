@@ -1,5 +1,6 @@
 #include "../include/image.hpp"
 #include "../include/ImageMatrix.hpp"
+#include "../include/BitReader.hpp"
 #include <iomanip>
 #include <string>
 #include <fstream>
@@ -54,12 +55,8 @@ ImageType checkType(std::vector<uint8_t> data){
 }
 
 uint32_t readBigEndian32(const std::vector<uint8_t>& data, size_t offset){
-    uint32_t result = 0;
-    for(int i = 0; i < 4; i++){
-        uint32_t value = data[offset + i];
-        result |= value << (8 * (3 - i));
-    }
-    return result;
+    BitReader reader(data, offset);
+    return reader.readBits(32);
 }
 
 
@@ -188,7 +185,7 @@ void inspectZlibHeader(const std::vector<uint8_t>& data) {
         throw std::runtime_error("not deflate comparision method");
     }
 
-    uint32_t header = (cmf << 8) | flg;
+    uint16_t header = (static_cast<uint16_t>(cmf) << 8) | flg;
 
     if(header % 31 != 0) {
         throw std::runtime_error("invalid zlib checksum");
@@ -203,21 +200,24 @@ void inspectZlibHeader(const std::vector<uint8_t>& data) {
 
 DeflateBlock inspectDeflateBlock(const std::vector<uint8_t>& data) {
     if (data.empty()) {
-        throw std::runtime_error("empty deflate data");
+        throw std::runtime_error("Empty DEFLATE data");
     }
 
+    DeflateBlock block;
     uint8_t header = data[0];
-    bool isFinal = (header & 0x01) != 0;
-    uint8_t blockType = (header >> 1) & 0x03;
 
-    if (blockType == 0x03) {
-        throw std::runtime_error("reserved deflate block type");
+    bool bfinal = (header & 0x01) != 0;
+    uint8_t btype = (header >> 1) & 0x03;
+
+    block.isFinal = bfinal;
+
+    if (btype == 3) {
+        throw std::runtime_error("Reserved DEFLATE block type");
     }
 
-    return {
-        isFinal,
-        static_cast<DeflateBlockType>(blockType)
-    };
+    block.type = static_cast<DeflateBlockType>(btype);
+    return block;
+    
 }
 
 ImageMatrix Image::toMatrix(){
