@@ -157,6 +157,19 @@ ImageMetadata readPngIhdr(PngChunk& chunk) {
     return info;
 }
 
+std::vector<uint8_t> Image::extractIdat(){
+    std::vector<uint8_t> compressedData;
+    for(const PngChunk& chunk : this->chunks) {
+        if(chunk.type == "IDAT") {
+            compressedData.insert(compressedData.end(), chunk.data.begin(), chunk.data.end());
+        }
+    }
+    if (compressedData.empty()) {
+        throw std::runtime_error("PNG contains no IDAT data");
+    }
+    return compressedData;
+}
+
 ImageMatrix Image::toMatrix(){
     ImageType type = checkType(this->data);
     switch(type) {

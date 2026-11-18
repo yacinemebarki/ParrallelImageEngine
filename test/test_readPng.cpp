@@ -72,3 +72,22 @@ TEST(ImageTest, ParsesPngChunks) {
     EXPECT_EQ(chunks.front().type, "IHDR");
     EXPECT_EQ(chunks.back().type, "IEND");
 }
+
+TEST(PngReaderTest, ExtractsAndConcatenatesIDAT) {
+    Image image("main/image.png");
+
+    PngChunk chunk1;
+    chunk1.type = "IDAT";
+    chunk1.data = {1, 2, 3};
+
+    PngChunk chunk2;
+    chunk2.type = "IDAT";
+    chunk2.data = {4, 5, 6};
+
+    image.addChunk(chunk1);
+    image.addChunk(chunk2);
+
+    std::vector<uint8_t> expected = {1, 2, 3, 4, 5, 6};
+
+    EXPECT_EQ(image.extractIdat(), expected);
+}

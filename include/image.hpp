@@ -49,4 +49,5 @@ class Image{
     std::vector<PngChunk> getChunks();
     void addChunk(PngChunk chunk);
     void praseChunk();
+    std::vector<uint8_t> extractIdat();
 };
