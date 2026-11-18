@@ -15,6 +15,7 @@ enum class ImageType {
 std::vector<uint8_t> readFile(std::string filePath);
 ImageType checkType(std::vector<uint8_t> data);
 uint32_t readBigEndian32(const std::vector<uint8_t>& data, std::size_t offset);
+void inspectZlibHeader(const std::vector<uint8_t>& data);
 
 
 

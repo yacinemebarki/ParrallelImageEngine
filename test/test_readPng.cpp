@@ -91,3 +91,64 @@ TEST(PngReaderTest, ExtractsAndConcatenatesIDAT) {
 
     EXPECT_EQ(image.extractIdat(), expected);
 }
+
+TEST(ZlibHeaderTest, ValidHeader) {
+    std::vector<uint8_t> data = {
+        0x78, 0x9C, 0x00, 0x00, 0x00, 0x00
+    };
+
+    EXPECT_NO_THROW(inspectZlibHeader(data));
+}
+
+TEST(ZlibHeaderTest, InvalidDataSize) {
+    std::vector<uint8_t> data = {0x78, 0x9C};
+
+    EXPECT_THROW(
+        inspectZlibHeader(data),
+        std::runtime_error
+    );
+}
+
+TEST(ZlibHeaderTest, InvalidCompressionMethod) {
+    std::vector<uint8_t> data = {
+        0x79, 0x9C, 0x00, 0x00, 0x00, 0x00
+    };
+
+    EXPECT_THROW(
+        inspectZlibHeader(data),
+        std::runtime_error
+    );
+}
+
+TEST(ZlibHeaderTest, InvalidFCHECK) {
+    std::vector<uint8_t> data = {
+        0x78, 0x9D, 0x00, 0x00, 0x00, 0x00
+    };
+
+    EXPECT_THROW(
+        inspectZlibHeader(data),
+        std::runtime_error
+    );
+}
+
+TEST(ZlibHeaderTest, PresetDictionaryNotSupported) {
+    std::vector<uint8_t> data = {
+        0x78, 0x20, 0x00, 0x00, 0x00, 0x00
+    };
+
+    EXPECT_THROW(
+        inspectZlibHeader(data),
+        std::runtime_error
+    );
+}
+
+TEST(ZlibHeaderTest, InvalidWindowSize) {
+    std::vector<uint8_t> data = {
+        0x88, 0x1C, 0x00, 0x00, 0x00, 0x00
+    };
+
+    EXPECT_THROW(
+        inspectZlibHeader(data),
+        std::runtime_error
+    );
+}

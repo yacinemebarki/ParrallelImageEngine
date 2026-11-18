@@ -170,6 +170,37 @@ std::vector<uint8_t> Image::extractIdat(){
     return compressedData;
 }
 
+void inspectZlibHeader(const std::vector<uint8_t>& data) {
+    if(data.size() < 6) {
+        throw std::runtime_error("invalid zlib size");
+    }
+
+    uint8_t cmf = data[0];
+    uint8_t flg = data[1];
+
+    if ((cmf >> 4) > 7) {
+        throw std::runtime_error("invalid zlib window size");
+    }
+
+    uint8_t comparisonMethod = cmf & 0x0F;
+
+    if(comparisonMethod != 8) {
+        throw std::runtime_error("not deflate comparision method");
+    }
+
+    uint32_t header = (cmf << 8) | flg;
+
+    if(header % 31 != 0) {
+        throw std::runtime_error("invalid zlib checksum");
+    }
+
+    bool hasDictionary = (flg & 0x20) != 0;
+
+    if (hasDictionary) {
+        throw std::runtime_error("PNG does not support preset dictionaries");
+    }
+}
+
 ImageMatrix Image::toMatrix(){
     ImageType type = checkType(this->data);
     switch(type) {
