@@ -62,22 +62,6 @@ uint32_t readBigEndian32(const std::vector<uint8_t>& data, size_t offset){
     return result;
 }
 
-ImageMetadata readPngIhdr(std::vector<uint8_t>& data){
-    if(data.size() < 29){
-        throw std::runtime_error("invalid png format");
-    }
-    ImageMetadata info;
-    info.bitDepth = data[24];
-    info.colorType = data[25];
-    info.compressionMethod = data[26];
-    info.filterMethod = data[27];
-    info.interlaceMethod = data[28]; 
-    info.width = readBigEndian32(data, 16);
-    info.height = readBigEndian32(data, 20);
-    return info; 
-}
-
-
 
 Image::Image(std::string path){
     this->path = path;
@@ -117,7 +101,7 @@ void Image::praseChunk(){
 
         bool notfit = chunk.length > this->data.size() - offset - 4;
         
-        if(notfit){
+        if(notfit || this->data.size() - offset < 4){
             throw std::runtime_error("invalid PNG chunk length");
         }
 
@@ -132,6 +116,10 @@ void Image::praseChunk(){
             throw std::runtime_error("the first chunk must be ihdr");
         }
 
+        if(!this->chunks.empty() && !notIHDR){
+            throw std::runtime_error("found ihdr in the midle");
+        }
+
         this->addChunk(chunk);
 
         if(chunk.type == "IEND"){
@@ -142,9 +130,31 @@ void Image::praseChunk(){
             break;
         }
     }
+    if (offset != this->data.size()) {
+        throw std::runtime_error("Unexpected data after IEND");
+    }
     if (!foundIEND) {
         throw std::runtime_error("PNG is missing IEND");
     }
+}
+
+ImageMetadata readPngIhdr(PngChunk& chunk) {
+    if (chunk.type != "IHDR" || chunk.length != 13) {
+        throw std::runtime_error("Invalid IHDR chunk");
+    }
+
+    ImageMetadata info;
+
+    info.width = readBigEndian32(chunk.data, 0);
+    info.height = readBigEndian32(chunk.data, 4);
+
+    info.bitDepth = chunk.data[8];
+    info.colorType = chunk.data[9];
+    info.compressionMethod = chunk.data[10];
+    info.filterMethod = chunk.data[11];
+    info.interlaceMethod = chunk.data[12];
+
+    return info;
 }
 
 ImageMatrix Image::toMatrix(){
@@ -152,7 +162,7 @@ ImageMatrix Image::toMatrix(){
     switch(type) {
         case ImageType::PNG:
             this->praseChunk();
-            this->setInfo(readPngIhdr(this->data));
+            this->setInfo(readPngIhdr(this->chunks[0]));
             break;
         case ImageType::JPEG:
             break;
