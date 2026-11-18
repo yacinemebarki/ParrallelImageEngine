@@ -152,3 +152,48 @@ TEST(ZlibHeaderTest, InvalidWindowSize) {
         std::runtime_error
     );
 }
+
+TEST(DeflateTest, StoredBlock) {
+    std::vector<uint8_t> data = {0x01};
+
+    DeflateBlock block = inspectDeflateBlock(data);
+
+    EXPECT_TRUE(block.isFinal);
+    EXPECT_EQ(block.type, DeflateBlockType::Stored);
+}
+
+TEST(DeflateTest, FixedHuffmanBlock) {
+    std::vector<uint8_t> data = {0x03};
+
+    DeflateBlock block = inspectDeflateBlock(data);
+
+    EXPECT_TRUE(block.isFinal);
+    EXPECT_EQ(block.type, DeflateBlockType::FixedHuffman);
+}
+
+TEST(DeflateTest, DynamicHuffmanBlock) {
+    std::vector<uint8_t> data = {0x05};
+
+    DeflateBlock block = inspectDeflateBlock(data);
+
+    EXPECT_TRUE(block.isFinal);
+    EXPECT_EQ(block.type, DeflateBlockType::DynamicHuffman);
+}
+
+TEST(DeflateTest, ReservedBlock) {
+    std::vector<uint8_t> data = {0x07};
+
+    EXPECT_THROW(
+        inspectDeflateBlock(data),
+        std::runtime_error
+    );
+}
+
+TEST(DeflateTest, EmptyData) {
+    std::vector<uint8_t> data;
+
+    EXPECT_THROW(
+        inspectDeflateBlock(data),
+        std::runtime_error
+    );
+}

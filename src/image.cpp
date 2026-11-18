@@ -201,6 +201,25 @@ void inspectZlibHeader(const std::vector<uint8_t>& data) {
     }
 }
 
+DeflateBlock inspectDeflateBlock(const std::vector<uint8_t>& data) {
+    if (data.empty()) {
+        throw std::runtime_error("empty deflate data");
+    }
+
+    uint8_t header = data[0];
+    bool isFinal = (header & 0x01) != 0;
+    uint8_t blockType = (header >> 1) & 0x03;
+
+    if (blockType == 0x03) {
+        throw std::runtime_error("reserved deflate block type");
+    }
+
+    return {
+        isFinal,
+        static_cast<DeflateBlockType>(blockType)
+    };
+}
+
 ImageMatrix Image::toMatrix(){
     ImageType type = checkType(this->data);
     switch(type) {
