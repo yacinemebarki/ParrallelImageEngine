@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 #include "ImageMatrix.hpp"
-#include "BitReader.hpp"
 
 enum class ImageType {
     PNG,
@@ -16,7 +15,6 @@ enum class ImageType {
 std::vector<uint8_t> readFile(std::string filePath);
 ImageType checkType(std::vector<uint8_t> data);
 uint32_t readBigEndian32(const std::vector<uint8_t>& data, std::size_t offset);
-void inspectZlibHeader(const std::vector<uint8_t>& data);
 struct ImageMetadata {
     uint32_t width;
     uint32_t height;
@@ -35,25 +33,6 @@ struct PngChunk {
 };
 
 ImageMetadata readPngIhdr(PngChunk& chunk);
-
-enum class DeflateBlockType {
-    Stored = 0,
-    FixedHuffman = 1,
-    DynamicHuffman = 2
-};
-
-struct DeflateBlock {
-    bool isFinal;
-    DeflateBlockType type;
-};
-
-struct StoredBlock {
-    uint16_t length;
-    uint16_t inverseLength;
-    std::vector<uint8_t> data;
-};
-
-DeflateBlock inspectDeflateBlock(BitReader& reader);
 
 class Image{
     private: std::string path;  

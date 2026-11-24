@@ -5,6 +5,7 @@
 
 #include "../include/image.hpp"
 #include "../include/BitReader.hpp"
+#include "../include/Deflate.hpp"
 
 TEST(PngReaderTest, ReadsBigEndian32BitInteger) {
     std::vector<uint8_t> data = {
@@ -106,14 +107,14 @@ TEST(ZlibHeaderTest, ValidHeader) {
         0x78, 0x9C, 0x00, 0x00, 0x00, 0x00
     };
 
-    EXPECT_NO_THROW(inspectZlibHeader(data));
+    EXPECT_NO_THROW(Deflate::inspectZlibHeader(data));
 }
 
 TEST(ZlibHeaderTest, InvalidDataSize) {
     std::vector<uint8_t> data = {0x78, 0x9C};
 
     EXPECT_THROW(
-        inspectZlibHeader(data),
+        Deflate::inspectZlibHeader(data),
         std::runtime_error
     );
 }
@@ -124,7 +125,7 @@ TEST(ZlibHeaderTest, InvalidCompressionMethod) {
     };
 
     EXPECT_THROW(
-        inspectZlibHeader(data),
+        Deflate::inspectZlibHeader(data),
         std::runtime_error
     );
 }
@@ -135,7 +136,7 @@ TEST(ZlibHeaderTest, InvalidFCHECK) {
     };
 
     EXPECT_THROW(
-        inspectZlibHeader(data),
+        Deflate::inspectZlibHeader(data),
         std::runtime_error
     );
 }
@@ -146,7 +147,7 @@ TEST(ZlibHeaderTest, PresetDictionaryNotSupported) {
     };
 
     EXPECT_THROW(
-        inspectZlibHeader(data),
+        Deflate::inspectZlibHeader(data),
         std::runtime_error
     );
 }
@@ -157,7 +158,7 @@ TEST(ZlibHeaderTest, InvalidWindowSize) {
     };
 
     EXPECT_THROW(
-        inspectZlibHeader(data),
+        Deflate::inspectZlibHeader(data),
         std::runtime_error
     );
 }
@@ -167,38 +168,42 @@ TEST(DeflateTest, StoredBlock) {
     std::vector<uint8_t> data = {0x01};
     BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(reader);
+    Deflate deflate(reader);
+    Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
-    EXPECT_EQ(block.type, DeflateBlockType::Stored);
+    EXPECT_EQ(block.type, Deflate::BlockType::Stored);
 }
 
 TEST(DeflateTest, FixedHuffmanBlock) {
     std::vector<uint8_t> data = {0x03};
     BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(reader);
+    Deflate deflate(reader);
+    Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
-    EXPECT_EQ(block.type, DeflateBlockType::FixedHuffman);
+    EXPECT_EQ(block.type, Deflate::BlockType::FixedHuffman);
 }
 
 TEST(DeflateTest, DynamicHuffmanBlock) {
     std::vector<uint8_t> data = {0x05};
     BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(reader);
+    Deflate deflate(reader);
+    Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
-    EXPECT_EQ(block.type, DeflateBlockType::DynamicHuffman);
+    EXPECT_EQ(block.type, Deflate::BlockType::DynamicHuffman);
 }
 
 TEST(DeflateTest, ReservedBlock) {
     std::vector<uint8_t> data = {0x07};
     BitReader reader(data);
 
+    Deflate deflate(reader);
     EXPECT_THROW(
-        inspectDeflateBlock(reader),
+        deflate.inspectBlock(),
         std::runtime_error
     );
 }
@@ -207,9 +212,9 @@ TEST(DeflateTest, EmptyData) {
     std::vector<uint8_t> data;
     BitReader reader(data);
 
+    Deflate deflate(reader);
     EXPECT_THROW(
-        inspectDeflateBlock(reader),
+        deflate.inspectBlock(),
         std::out_of_range
     );
 }
-

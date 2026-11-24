@@ -1,5 +1,4 @@
 #include "../include/image.hpp"
-#include "../include/BitReader.hpp"
 #include <iomanip>
 #include <string>
 #include <fstream>
@@ -82,49 +81,3 @@ ImageMetadata readPngIhdr(PngChunk& chunk) {
     return info;
 }
 
-void inspectZlibHeader(const std::vector<uint8_t>& data) {
-    if(data.size() < 6) {
-        throw std::runtime_error("invalid zlib size");
-    }
-
-    uint8_t cmf = data[0];
-    uint8_t flg = data[1];
-
-    if ((cmf >> 4) > 7) {
-        throw std::runtime_error("invalid zlib window size");
-    }
-
-    uint8_t comparisonMethod = cmf & 0x0F;
-
-    if(comparisonMethod != 8) {
-        throw std::runtime_error("not deflate comparision method");
-    }
-
-    uint16_t header = (static_cast<uint16_t>(cmf) << 8) | flg;
-
-    if(header % 31 != 0) {
-        throw std::runtime_error("invalid zlib checksum");
-    }
-
-    bool hasDictionary = (flg & 0x20) != 0;
-
-    if (hasDictionary) {
-        throw std::runtime_error("PNG does not support preset dictionaries");
-    }
-}
-
-DeflateBlock inspectDeflateBlock(BitReader& reader) {
-    DeflateBlock block;
-
-    bool bfinal = reader.readBits(1) != 0;
-    uint8_t btype = reader.readBits(2) & 0x03;
-
-    block.isFinal = bfinal;
-
-    if (btype == 3) {
-        throw std::runtime_error("Reserved DEFLATE block type");
-    }
-
-    block.type = static_cast<DeflateBlockType>(btype);
-    return block;
-}
