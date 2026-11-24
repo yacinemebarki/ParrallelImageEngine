@@ -54,10 +54,18 @@ ImageType checkType(std::vector<uint8_t> data){
     return ImageType::PNG;
 }
 
-uint32_t readBigEndian32(const std::vector<uint8_t>& data, size_t offset){
-    BitReader reader(data, offset);
-    return reader.readBits(32);
+
+uint32_t readBigEndian32(const std::vector<uint8_t>& data, size_t offset) {
+    if (offset > data.size() || data.size() - offset < 4) {
+        throw std::out_of_range("Not enough data");
+    }
+
+    return (static_cast<uint32_t>(data[offset]) << 24) |
+           (static_cast<uint32_t>(data[offset + 1]) << 16) |
+           (static_cast<uint32_t>(data[offset + 2]) << 8) |
+           static_cast<uint32_t>(data[offset + 3]);
 }
+
 
 
 Image::Image(std::string path){
@@ -198,16 +206,11 @@ void inspectZlibHeader(const std::vector<uint8_t>& data) {
     }
 }
 
-DeflateBlock inspectDeflateBlock(const std::vector<uint8_t>& data) {
-    if (data.empty()) {
-        throw std::runtime_error("Empty DEFLATE data");
-    }
-
+DeflateBlock inspectDeflateBlock(BitReader& reader) {
     DeflateBlock block;
-    uint8_t header = data[0];
 
-    bool bfinal = (header & 0x01) != 0;
-    uint8_t btype = (header >> 1) & 0x03;
+    bool bfinal = reader.readBits(1) != 0;
+    uint8_t btype = reader.readBits(2) & 0x03;
 
     block.isFinal = bfinal;
 

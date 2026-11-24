@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "../include/image.hpp"
+#include "../include/BitReader.hpp"
 
 TEST(PngReaderTest, ReadsBigEndian32BitInteger) {
     std::vector<uint8_t> data = {
@@ -161,10 +162,12 @@ TEST(ZlibHeaderTest, InvalidWindowSize) {
     );
 }
 
+
 TEST(DeflateTest, StoredBlock) {
     std::vector<uint8_t> data = {0x01};
+    BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(data);
+    DeflateBlock block = inspectDeflateBlock(reader);
 
     EXPECT_TRUE(block.isFinal);
     EXPECT_EQ(block.type, DeflateBlockType::Stored);
@@ -172,8 +175,9 @@ TEST(DeflateTest, StoredBlock) {
 
 TEST(DeflateTest, FixedHuffmanBlock) {
     std::vector<uint8_t> data = {0x03};
+    BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(data);
+    DeflateBlock block = inspectDeflateBlock(reader);
 
     EXPECT_TRUE(block.isFinal);
     EXPECT_EQ(block.type, DeflateBlockType::FixedHuffman);
@@ -181,8 +185,9 @@ TEST(DeflateTest, FixedHuffmanBlock) {
 
 TEST(DeflateTest, DynamicHuffmanBlock) {
     std::vector<uint8_t> data = {0x05};
+    BitReader reader(data);
 
-    DeflateBlock block = inspectDeflateBlock(data);
+    DeflateBlock block = inspectDeflateBlock(reader);
 
     EXPECT_TRUE(block.isFinal);
     EXPECT_EQ(block.type, DeflateBlockType::DynamicHuffman);
@@ -190,18 +195,21 @@ TEST(DeflateTest, DynamicHuffmanBlock) {
 
 TEST(DeflateTest, ReservedBlock) {
     std::vector<uint8_t> data = {0x07};
+    BitReader reader(data);
 
     EXPECT_THROW(
-        inspectDeflateBlock(data),
+        inspectDeflateBlock(reader),
         std::runtime_error
     );
 }
 
 TEST(DeflateTest, EmptyData) {
     std::vector<uint8_t> data;
+    BitReader reader(data);
 
     EXPECT_THROW(
-        inspectDeflateBlock(data),
-        std::runtime_error
+        inspectDeflateBlock(reader),
+        std::out_of_range
     );
 }
+

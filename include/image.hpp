@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "ImageMatrix.hpp"
+#include "BitReader.hpp"
 
 enum class ImageType {
     PNG,
@@ -50,7 +51,7 @@ struct StoredBlock {
     std::vector<uint8_t> data;
 };
 
-DeflateBlock inspectDeflateBlock(const std::vector<uint8_t>& data);
+DeflateBlock inspectDeflateBlock(BitReader& reader);
 
 class Image{
     private: std::string path;  

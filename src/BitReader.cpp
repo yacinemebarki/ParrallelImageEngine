@@ -26,9 +26,17 @@ uint32_t BitReader::readBits(int n){
     uint32_t value = 0;
     for(int i = 0; i < n; ++i){
         const size_t byteIndex = bitPosition / 8;
-        const size_t bitOffset = 7 - (bitPosition % 8);
-        value = (value << 1) | ((data[byteIndex] >> bitOffset) & 1U);
+        const size_t bitOffset = (bitPosition % 8);
+        uint32_t bit = (data[byteIndex] >> bitOffset) & 1U;
+        value |= (bit << i);
         ++bitPosition;
     }
     return value;
+}
+
+size_t BitReader::getPostion(){
+    return this->bitPosition;
+}
+std::vector<uint8_t> BitReader::getData(){
+    return this->data;
 }
