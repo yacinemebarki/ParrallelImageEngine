@@ -34,6 +34,8 @@ struct PngChunk {
     uint32_t crc;
 };
 
+ImageMetadata readPngIhdr(PngChunk& chunk);
+
 enum class DeflateBlockType {
     Stored = 0,
     FixedHuffman = 1,

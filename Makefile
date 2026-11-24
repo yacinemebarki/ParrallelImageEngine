@@ -6,13 +6,14 @@ TEST_TARGET = test_runner
 
 MAIN = main/main.cpp
 IMAGE = src/image.cpp
+IMAGE_UTILS = src/imageUtils.cpp
 BITREADER = src/BitReader.cpp
 PIXEL = src/pixel.cpp
 IMAGEMATRIX = src/ImageMatrix.cpp
 READPNG_TEST = test/test_readPng.cpp
 
-SOURCES = $(MAIN) $(IMAGE) $(BITREADER) $(PIXEL) $(IMAGEMATRIX)
-TEST_SOURCES = $(READPNG_TEST) $(IMAGE) $(BITREADER) $(PIXEL) $(IMAGEMATRIX)
+SOURCES = $(MAIN) $(IMAGE) $(IMAGE_UTILS) $(BITREADER) $(PIXEL) $(IMAGEMATRIX)
+TEST_SOURCES = $(READPNG_TEST) $(IMAGE) $(IMAGE_UTILS) $(BITREADER) $(PIXEL) $(IMAGEMATRIX)
 
 $(TARGET): $(SOURCES)
 	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET)
