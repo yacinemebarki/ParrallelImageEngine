@@ -46,3 +46,54 @@ void Deflate::inspectZlibHeader(const std::vector<uint8_t>& data) {
         throw std::runtime_error("PNG does not support preset dictionaries");
     }
 }
+
+std::vector<uint8_t> Deflate::decompressStored(){
+    std::vector<uint8_t> output;
+    reader.alignToByte();
+
+    uint16_t len = reader.readBits(16);
+    uint16_t nlen = reader.readBits(16);
+
+    if ((len ^ nlen) != 0xFFFF) {
+        throw std::runtime_error("Invalid stored block");
+    }
+
+    for(size_t i = 0; i < len; i++) {
+        uint8_t byte = static_cast<uint8_t>(reader.readBits(8));
+        output.push_back(byte);        
+    }
+    
+    return output;
+}
+
+
+std::vector<uint8_t> Deflate::decompress() {
+    std::vector<uint8_t> output;
+    std::vector<uint8_t> blockData;
+
+
+    while(true) {
+        Block block = inspectBlock();
+
+        switch(block.type) {
+
+            case BlockType::Stored:
+                blockData = decompressStored();
+                break;
+
+            case BlockType::FixedHuffman:
+                break;
+
+            case BlockType::DynamicHuffman:
+                break;
+            
+        }
+        output.insert(output.end(), blockData.begin(), blockData.end());
+
+        if(block.isFinal) {
+            break;
+        }
+    }
+
+    return output;
+}

@@ -27,8 +27,12 @@ public:
 
     Block inspectBlock();
     static void inspectZlibHeader(const std::vector<uint8_t>& data);
-    
+    std::vector<uint8_t> decompress();
 
+    std::vector<uint8_t> decompressStored();
+    std::vector<uint8_t> decompressFixedHuffman();
+    std::vector<uint8_t> decompressDynamicHuffman();
+        
     private:
         BitReader& reader;
 };

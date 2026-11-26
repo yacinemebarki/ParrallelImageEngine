@@ -218,3 +218,15 @@ TEST(DeflateTest, EmptyData) {
         std::out_of_range
     );
 }
+
+TEST(DeflateTest, CompressedStored) {
+    std::vector<uint8_t> data = {0x01, 0x05, 0x00, 0xFA, 0xFF, 0x48, 0x65, 0x6C, 0x6C, 0x6F};
+    BitReader reader(data);
+
+    Deflate deflate(reader);
+
+    std::vector<uint8_t> expected = {'H', 'e', 'l', 'l', 'o'};
+
+    std::vector<uint8_t> actual = deflate.decompress();
+    EXPECT_EQ(actual, expected);
+}

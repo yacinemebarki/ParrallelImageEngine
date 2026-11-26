@@ -18,4 +18,5 @@ class BitReader{
     size_t getPostion();
     std::vector<uint8_t> getData();
     uint32_t readBits(int n); 
+    void alignToByte();
 };

@@ -92,10 +92,12 @@ std::vector<uint8_t> Image::extractIdat(){
 
 ImageMatrix Image::toMatrix(){
     ImageType type = checkType(this->data);
+    std::vector<uint8_t> compressedData;
     switch(type) {
         case ImageType::PNG:
             this->praseChunk();
             this->setInfo(readPngIhdr(this->chunks[0]));
+            compressedData = this->extractIdat();
             break;
         case ImageType::JPEG:
             break;

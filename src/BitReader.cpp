@@ -40,3 +40,12 @@ size_t BitReader::getPostion(){
 std::vector<uint8_t> BitReader::getData(){
     return this->data;
 }
+
+void BitReader::alignToByte() {
+    size_t padding = (8 - (bitPosition % 8)) % 8;
+
+    if (padding > data.size() * 8 - bitPosition) {
+        throw std::out_of_range("Not enough data to align");
+    }
+    bitPosition += padding;
+}
