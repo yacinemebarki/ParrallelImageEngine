@@ -23,6 +23,12 @@ public:
         std::vector<uint8_t> data;
     };
 
+    struct HuffmanCode {
+        uint16_t symbol;
+        uint16_t code;
+        uint8_t length;
+    };
+
     explicit Deflate(BitReader& reader);
 
     Block inspectBlock();
@@ -32,7 +38,15 @@ public:
     std::vector<uint8_t> decompressStored();
     std::vector<uint8_t> decompressFixedHuffman();
     std::vector<uint8_t> decompressDynamicHuffman();
-        
+    void generateLiteral();
+    void generateLiteralCode();
+
     private:
         BitReader& reader;
+    
+    public:
+        std::vector<uint8_t> literalLength;
+        std::vector<size_t> literalDistance;
+        std::vector<HuffmanCode> literalCode;
+        std::vector<uint16_t> count;
 };

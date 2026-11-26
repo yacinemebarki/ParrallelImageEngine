@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 Deflate::Deflate(BitReader& reader)
-    : reader(reader)
+    : reader(reader), literalLength(288), literalDistance(32, 5), count(16, 0)
 {
 }
 
@@ -47,6 +47,38 @@ void Deflate::inspectZlibHeader(const std::vector<uint8_t>& data) {
     }
 }
 
+void Deflate::generateLiteral() {
+    for(int i = 0; i <= 143; i++) {
+        literalLength[i] = 8;
+    }
+
+    for(int i = 144; i <= 255; i++) {
+        literalLength[i] = 9;
+    }
+
+    for(int i = 256; i <= 279; i++) {
+        literalLength[i] = 7;
+    }
+
+    for(int i = 280; i <= 287; i++) {
+        literalLength[i] = 8;
+    }
+
+}
+
+void Deflate::generateLiteralCode() {
+    for(uint8_t len : literalLength) {
+        count[len]++;
+    }    
+    count[0] = 0;
+
+    std::vector<uint16_t> nextCode(16, 0);
+
+    for(int len = 1; len < 16; len++) {
+        nextCode[len] = (nextCode[len - 1] + count[len - 1]) << 1;
+    }
+}
+
 std::vector<uint8_t> Deflate::decompressStored(){
     std::vector<uint8_t> output;
     reader.alignToByte();
@@ -66,6 +98,13 @@ std::vector<uint8_t> Deflate::decompressStored(){
     return output;
 }
 
+std::vector<uint8_t> Deflate::decompressFixedHuffman() {
+
+}
+
+std::vector<uint8_t> Deflate::decompressDynamicHuffman() {
+
+}
 
 std::vector<uint8_t> Deflate::decompress() {
     std::vector<uint8_t> output;
@@ -82,9 +121,11 @@ std::vector<uint8_t> Deflate::decompress() {
                 break;
 
             case BlockType::FixedHuffman:
+                blockData = decompressFixedHuffman();
                 break;
 
             case BlockType::DynamicHuffman:
+                blockData = decompressDynamicHuffman();
                 break;
             
         }
