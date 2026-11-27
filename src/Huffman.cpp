@@ -50,17 +50,17 @@ uint16_t Huffman::decodeSymbol(BitReader& reader) const {
     uint16_t currentLength = 0;
     
     while(currentLength < 15) {
-        currentCode += reader.readBits(1);
+        currentCode = (currentCode << 1) | reader.readBits(1);
         currentLength++;
 
         uint16_t symbol = searchSymbol(currentCode, currentLength);
 
-        if(symbol != -1) {
+        if(symbol != 65535) {
             return symbol;
-        }     
+        }
     }
 
-    throw std::runtime_error("nothing match");
+    throw std::runtime_error("Invalid huffman code");
 }
 
 const std::vector<uint8_t>& Huffman::getLiteralLength() const {
