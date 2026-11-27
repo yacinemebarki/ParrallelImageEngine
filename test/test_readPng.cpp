@@ -6,6 +6,8 @@
 #include "../include/image.hpp"
 #include "../include/BitReader.hpp"
 #include "../include/Deflate.hpp"
+#include "../include/DynamicHuffman.hpp"
+#include "../include/FixedHuffman.hpp"
 
 TEST(PngReaderTest, ReadsBigEndian32BitInteger) {
     std::vector<uint8_t> data = {
@@ -229,4 +231,36 @@ TEST(DeflateTest, CompressedStored) {
 
     std::vector<uint8_t> actual = deflate.decompress();
     EXPECT_EQ(actual, expected);
+}
+
+TEST(HuffmanTest, FixedTreeGeneratesCodeLengthsAndCodes) {
+    FixedHuffman huffman;
+
+    huffman.generateLiteral();
+    huffman.generateLiteralCode();
+
+    const auto& lengths = huffman.getLiteralLength();
+    const auto& codes = huffman.getLiteralCode();
+    ASSERT_EQ(lengths.size(), 288);
+    EXPECT_EQ(lengths[0], 8);
+    EXPECT_EQ(lengths[144], 9);
+    EXPECT_EQ(lengths[256], 7);
+    EXPECT_EQ(lengths[280], 8);
+    ASSERT_EQ(codes.size(), 288);
+    EXPECT_EQ(codes[0].symbol, 0);
+    EXPECT_EQ(codes[0].code, 48);
+    EXPECT_EQ(codes[0].length, 8);
+}
+
+TEST(HuffmanTest, DynamicTreeUsesProvidedCodeLengths) {
+    DynamicHuffman huffman({1, 2, 2, 0});
+
+    huffman.generateLiteral();
+    huffman.generateLiteralCode();
+
+    const auto& codes = huffman.getLiteralCode();
+    ASSERT_EQ(codes.size(), 3);
+    EXPECT_EQ(codes[0].code, 0);
+    EXPECT_EQ(codes[1].code, 2);
+    EXPECT_EQ(codes[2].code, 3);
 }
