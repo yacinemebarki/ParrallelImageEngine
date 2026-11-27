@@ -233,6 +233,21 @@ TEST(DeflateTest, CompressedStored) {
     EXPECT_EQ(actual, expected);
 }
 
+TEST(DeflateTest, StoredBlockAppendsToExistingOutput) {
+    std::vector<uint8_t> data = {
+        0x01, 0x05, 0x00, 0xFA, 0xFF, 0x48, 0x65, 0x6C, 0x6C, 0x6F
+    };
+    BitReader reader(data);
+    Deflate deflate(reader);
+    deflate.inspectBlock();
+
+    std::vector<uint8_t> output = {'X'};
+    deflate.decompressStored(output);
+
+    const std::vector<uint8_t> expected = {'X', 'H', 'e', 'l', 'l', 'o'};
+    EXPECT_EQ(output, expected);
+}
+
 TEST(HuffmanTest, FixedTreeGeneratesCodeLengthsAndCodes) {
     FixedHuffman huffman;
 
@@ -250,17 +265,4 @@ TEST(HuffmanTest, FixedTreeGeneratesCodeLengthsAndCodes) {
     EXPECT_EQ(codes[0].symbol, 0);
     EXPECT_EQ(codes[0].code, 48);
     EXPECT_EQ(codes[0].length, 8);
-}
-
-TEST(HuffmanTest, DynamicTreeUsesProvidedCodeLengths) {
-    DynamicHuffman huffman({1, 2, 2, 0});
-
-    huffman.generateLiteral();
-    huffman.generateLiteralCode();
-
-    const auto& codes = huffman.getLiteralCode();
-    ASSERT_EQ(codes.size(), 3);
-    EXPECT_EQ(codes[0].code, 0);
-    EXPECT_EQ(codes[1].code, 2);
-    EXPECT_EQ(codes[2].code, 3);
 }

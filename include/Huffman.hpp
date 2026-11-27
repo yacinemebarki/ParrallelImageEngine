@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+#include "../include/BitReader.hpp"
 
 class Huffman {
 public:
@@ -20,6 +21,8 @@ public:
     const std::vector<uint8_t>& getLiteralLength() const;
     const std::vector<uint16_t>& getCount() const;
     const std::vector<Code>& getLiteralCode() const;
+    uint16_t decodeSymbol(BitReader& reader) const;
+    uint16_t searchSymbol(uint16_t code, uint16_t length) const;
 
 protected:
     explicit Huffman(std::size_t literalCount);

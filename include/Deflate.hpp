@@ -29,9 +29,9 @@ public:
     static void inspectZlibHeader(const std::vector<uint8_t>& data);
     std::vector<uint8_t> decompress();
 
-    std::vector<uint8_t> decompressStored();
-    std::vector<uint8_t> decompressFixedHuffman();
-    std::vector<uint8_t> decompressDynamicHuffman();
+    void decompressStored(std::vector<uint8_t>& output);
+    void decompressFixedHuffman(std::vector<uint8_t>& output);
+    void decompressDynamicHuffman(std::vector<uint8_t>& output);
 
     private:
         BitReader& reader;

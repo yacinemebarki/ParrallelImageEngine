@@ -47,8 +47,7 @@ void Deflate::inspectZlibHeader(const std::vector<uint8_t>& data) {
     }
 }
 
-std::vector<uint8_t> Deflate::decompressStored(){
-    std::vector<uint8_t> output;
+void Deflate::decompressStored(std::vector<uint8_t>& output){
     reader.alignToByte();
 
     uint16_t len = reader.readBits(16);
@@ -58,26 +57,22 @@ std::vector<uint8_t> Deflate::decompressStored(){
         throw std::runtime_error("Invalid stored block");
     }
 
-    for(size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; i++) {
         uint8_t byte = static_cast<uint8_t>(reader.readBits(8));
-        output.push_back(byte);        
+        output.push_back(byte);
     }
+}
+
+void Deflate::decompressFixedHuffman(std::vector<uint8_t>& output) {
+
+}
+
+void Deflate::decompressDynamicHuffman(std::vector<uint8_t>& output) {
     
-    return output;
-}
-
-std::vector<uint8_t> Deflate::decompressFixedHuffman() {
-
-}
-
-std::vector<uint8_t> Deflate::decompressDynamicHuffman() {
-
 }
 
 std::vector<uint8_t> Deflate::decompress() {
     std::vector<uint8_t> output;
-    std::vector<uint8_t> blockData;
-
 
     while(true) {
         Block block = inspectBlock();
@@ -85,19 +80,18 @@ std::vector<uint8_t> Deflate::decompress() {
         switch(block.type) {
 
             case BlockType::Stored:
-                blockData = decompressStored();
+                decompressStored(output);
                 break;
 
             case BlockType::FixedHuffman:
-                blockData = decompressFixedHuffman();
+                decompressFixedHuffman(output);
                 break;
 
             case BlockType::DynamicHuffman:
-                blockData = decompressDynamicHuffman();
+                decompressDynamicHuffman(output);
                 break;
             
         }
-        output.insert(output.end(), blockData.begin(), blockData.end());
 
         if(block.isFinal) {
             break;

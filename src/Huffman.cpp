@@ -36,6 +36,33 @@ void Huffman::generateLiteralCode() {
     }
 }
 
+uint16_t Huffman::searchSymbol(uint16_t code, uint16_t length) const {
+    for(const Code& huffman : literalCode) {
+        if(huffman.length == length && huffman.code == code) {
+            return huffman.symbol;
+        }
+    }
+    return -1;
+}
+
+uint16_t Huffman::decodeSymbol(BitReader& reader) const {
+    uint16_t currentCode = 0;
+    uint16_t currentLength = 0;
+    
+    while(currentLength < 15) {
+        currentCode += reader.readBits(1);
+        currentLength++;
+
+        uint16_t symbol = searchSymbol(currentCode, currentLength);
+
+        if(symbol != -1) {
+            return symbol;
+        }     
+    }
+
+    throw std::runtime_error("nothing match");
+}
+
 const std::vector<uint8_t>& Huffman::getLiteralLength() const {
     return literalLength;
 }
