@@ -4,6 +4,6 @@
 
 class FixedHuffman : public Huffman {
 public:
-    FixedHuffman();
+    FixedHuffman(std::size_t litteralCount);
     void generateLiteral() override;
 };

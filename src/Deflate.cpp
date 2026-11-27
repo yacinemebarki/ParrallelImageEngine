@@ -1,8 +1,8 @@
 #include "../include/Deflate.hpp"
 #include <stdexcept>
 
-Deflate::Deflate(BitReader& reader)
-    : reader(reader)
+Deflate::Deflate(BitReader& reader, Huffman& litteralTree, Huffman& distanceTree)
+    : reader(reader), litteralTree(litteralTree), distanceTree(distanceTree)
 {
 }
 
@@ -63,8 +63,42 @@ void Deflate::decompressStored(std::vector<uint8_t>& output){
     }
 }
 
-void Deflate::decompressFixedHuffman(std::vector<uint8_t>& output) {
+void Deflate::decompressFixedHuffman(std::vector<uint8_t>& output) {   
+    uint16_t symbol;
+    while(true) {
+        symbol = litteralTree.decodeSymbol(reader);
+        if(symbol == 256) {
+            break;
+        }
+        if(symbol <= 255) {
+            output.push_back(static_cast<uint8_t>(symbol));
+        }
+        else if(symbol <= 285) {
+            int index = symbol - 257;
+            
+            int len = lengthBase[index];
+            int extrat = lengthExtra[index];
+            len += static_cast<int>(reader.readBits(extrat));
+            
+            int distanceSymbol = distanceTree.decodeSymbol(reader);
+            
+            int distance = distanceBase[distanceSymbol];
+            int extraDistance = distanceExtra[distanceSymbol];
 
+            distance += static_cast<int>(reader.readBits(extraDistance));
+
+            if(distance > output.size()) {
+                throw std::runtime_error("Invalid distance");
+            }
+
+            for(int i = 0; i < len; i++) {
+                output.push_back(output[output.size() - distance]);
+            }
+        }
+        else {
+            throw std::runtime_error("Invalid literal/length symbol");
+        }
+    }
 }
 
 void Deflate::decompressDynamicHuffman(std::vector<uint8_t>& output) {

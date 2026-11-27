@@ -1,8 +1,11 @@
 #include "../include/FixedHuffman.hpp"
 
-FixedHuffman::FixedHuffman()
-    : Huffman(288)
+FixedHuffman::FixedHuffman(std::size_t litteralCount)
+    : Huffman(litteralCount)
 {
+    if(litteralCount == 32) {
+        std::fill(literalLength.begin(), literalLength.end(), 5);
+    }
 }
 
 void FixedHuffman::generateLiteral() {

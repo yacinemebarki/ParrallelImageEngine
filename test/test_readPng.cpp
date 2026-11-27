@@ -169,8 +169,10 @@ TEST(ZlibHeaderTest, InvalidWindowSize) {
 TEST(DeflateTest, StoredBlock) {
     std::vector<uint8_t> data = {0x01};
     BitReader reader(data);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
-    Deflate deflate(reader);
     Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
@@ -180,8 +182,10 @@ TEST(DeflateTest, StoredBlock) {
 TEST(DeflateTest, FixedHuffmanBlock) {
     std::vector<uint8_t> data = {0x03};
     BitReader reader(data);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
-    Deflate deflate(reader);
     Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
@@ -191,8 +195,10 @@ TEST(DeflateTest, FixedHuffmanBlock) {
 TEST(DeflateTest, DynamicHuffmanBlock) {
     std::vector<uint8_t> data = {0x05};
     BitReader reader(data);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
-    Deflate deflate(reader);
     Deflate::Block block = deflate.inspectBlock();
 
     EXPECT_TRUE(block.isFinal);
@@ -202,8 +208,10 @@ TEST(DeflateTest, DynamicHuffmanBlock) {
 TEST(DeflateTest, ReservedBlock) {
     std::vector<uint8_t> data = {0x07};
     BitReader reader(data);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
-    Deflate deflate(reader);
     EXPECT_THROW(
         deflate.inspectBlock(),
         std::runtime_error
@@ -213,8 +221,10 @@ TEST(DeflateTest, ReservedBlock) {
 TEST(DeflateTest, EmptyData) {
     std::vector<uint8_t> data;
     BitReader reader(data);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
-    Deflate deflate(reader);
     EXPECT_THROW(
         deflate.inspectBlock(),
         std::out_of_range
@@ -224,8 +234,9 @@ TEST(DeflateTest, EmptyData) {
 TEST(DeflateTest, CompressedStored) {
     std::vector<uint8_t> data = {0x01, 0x05, 0x00, 0xFA, 0xFF, 0x48, 0x65, 0x6C, 0x6C, 0x6F};
     BitReader reader(data);
-
-    Deflate deflate(reader);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+    Deflate deflate(reader, huffman, distance);
 
     std::vector<uint8_t> expected = {'H', 'e', 'l', 'l', 'o'};
 
@@ -238,7 +249,11 @@ TEST(DeflateTest, StoredBlockAppendsToExistingOutput) {
         0x01, 0x05, 0x00, 0xFA, 0xFF, 0x48, 0x65, 0x6C, 0x6C, 0x6F
     };
     BitReader reader(data);
-    Deflate deflate(reader);
+    FixedHuffman huffman(288);
+    FixedHuffman distance(32);
+
+
+    Deflate deflate(reader, huffman, distance);
     deflate.inspectBlock();
 
     std::vector<uint8_t> output = {'X'};
@@ -249,7 +264,7 @@ TEST(DeflateTest, StoredBlockAppendsToExistingOutput) {
 }
 
 TEST(HuffmanTest, FixedTreeGeneratesCodeLengthsAndCodes) {
-    FixedHuffman huffman;
+    FixedHuffman huffman(288);
 
     huffman.generateLiteral();
     huffman.generateLiteralCode();
