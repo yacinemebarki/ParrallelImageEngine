@@ -87,7 +87,7 @@ void Deflate::decompressFixedHuffman(std::vector<uint8_t>& output) {
 
             distance += static_cast<int>(reader.readBits(extraDistance));
 
-            if(distance > output.size()) {
+            if(distance >  static_cast<int>(output.size())) {
                 throw std::runtime_error("Invalid distance");
             }
 

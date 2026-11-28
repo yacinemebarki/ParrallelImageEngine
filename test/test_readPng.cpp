@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
@@ -280,4 +281,27 @@ TEST(HuffmanTest, FixedTreeGeneratesCodeLengthsAndCodes) {
     EXPECT_EQ(codes[0].symbol, 0);
     EXPECT_EQ(codes[0].code, 48);
     EXPECT_EQ(codes[0].length, 8);
+}
+
+
+TEST(DeflateTest, DecompressFixedHuffman) {
+    std::vector<uint8_t> compressed = {0xF3, 0x48, 0xCD, 0xC9, 0xC9, 0x07, 0x00};
+
+    BitReader reader(compressed);
+
+    FixedHuffman literalTree(288);
+    FixedHuffman distanceTree(32);
+
+    literalTree.generateLiteral();
+    literalTree.generateLiteralCode();
+
+    distanceTree.generateLiteralCode();
+
+    Deflate deflate(reader, literalTree, distanceTree);
+
+    std::vector<uint8_t> result = deflate.decompress();
+
+    std::string decoded(result.begin(), result.end());
+
+    EXPECT_EQ(decoded, "Hello");
 }
